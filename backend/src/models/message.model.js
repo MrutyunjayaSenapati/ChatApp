@@ -12,9 +12,7 @@
                 required:true,
             },
             text:{
-                type:mongoose.Schema.Types.ObjectId,
-                ref:"User",
-                required:true,
+                type:String
             },
             image:{
                 type:String,

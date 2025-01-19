@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { useChatStore } from '../store/useChatStore';
-import { Image, Send } from 'lucide-react';
+import { Image, Send,X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const MessageInput = () => {
@@ -40,7 +40,7 @@ const MessageInput = () => {
         setImagePreview(null);
         if(fileInputRef.current)fileInputRef.current.value="";
     } catch (error) {
-
+        console.error("Failed to send message:",error);
         
     }
     };
@@ -71,7 +71,7 @@ const MessageInput = () => {
             value={text}
             onChange={(e)=>setText(e.target.value)} />
 
-            <input type="text"
+            <input type="file"
             accept='image/*'
             className='hidden'
             ref={fileInputRef}
