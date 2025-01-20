@@ -2,63 +2,65 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 
-export const useChatStore=create((set,get)=>({
-    messages:[],
-    users:[],
-    selectedUser:null,
-    isUserLoading:false,
-    isMessagesLoading:false,
-    
-    getUsers:async()=>{
-        set({isUserLoading:true});
+export const useChatStore = create((set, get) => ({
+    messages: [],
+    users: [],
+    selectedUser: null,
+    isUserLoading: false,
+    isMessagesLoading: false,
+
+    getUsers: async () => {
+        set({ isUserLoading: true });
         try {
-            const res=await axiosInstance.get("/messages/users");
-            set({users:res.data});
+            const res = await axiosInstance.get("/messages/users");
+            set({ users: res.data });
         } catch (error) {
-            toast.error(error.response.data.messges);
-            
-        }
-        finally{
-            set({isUserLoading:false});
+            toast.error(error.response?.data?.messages || "Failed to fetch users");
+        } finally {
+            set({ isUserLoading: false });
         }
     },
-    getMessages:async()=>{
-        set({isMessagesLoading:true});
+
+    getMessages: async () => {
+        set({ isMessagesLoading: true });
         try {
-            const res=await axiosInstance.get
-            (`/messages/${userId}`);
-            console.log(res);
-            if(res?.data){
-            set({messages:res.data});
+            const { selectedUser } = get();
+            if (!selectedUser) {
+                toast.error("No user selected");
+                return;
             }
-            else{
+
+            const res = await axiosInstance.get(`/messages/${selectedUser._id}`);
+            if (res?.data) {
+                set({ messages: res.data });
+            } else {
                 toast.error("No messages found");
             }
         } catch (error) {
-            toast.error(error.response?.data?.messages||"Failed to fetch messages.");
-            
-        }
-        finally{
-            set({isMessagesLoading:false});
+            toast.error(error.response?.data?.messages || "Failed to fetch messages");
+        } finally {
+            set({ isMessagesLoading: false });
         }
     },
-   sendMessage: async (messageData) => {
-    const { selectedUser, messages } = get();
-    if (!selectedUser) {
-        toast.error("No user selected");
-        return;
-    }
 
-    try {
-        const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-        set({ messages: [...messages, res.data] });
-    } catch (error) {
-        toast.error(error.response?.data?.messages || "Failed to send message");
-    }
-},
+    sendMessage: async (messageData) => {
+        const { selectedUser, messages } = get();
+        if (!selectedUser) {
+            toast.error("No user selected");
+            return;
+        }
 
-  
-    setSelectedUser:(selectedUser)=>set({selectedUser})
+        try {
+            const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
+            if (res?.data) {
+                set({ messages: [...messages, res.data] });
+            } else {
+                toast.error("Invalid message data received");
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.messages || "Failed to send message");
+        }
+    },
 
-
-}))
+    setSelectedUser: (selectedUser) => set({ selectedUser }),
+}));
