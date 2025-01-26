@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useChatStore } from '../store/useChatStore';
 import MessageInput from './MessageInput';
 import ChatHeader from './ChatHeader';
@@ -7,12 +7,25 @@ import { useAuthStore } from '../store/useAuthStore';
 import { formatMessageTime } from '../lib/utils';
 
 function ChatContainer() {
-  const { messages, getMessages, isMessagesLoading, selectedUser } = useChatStore();
+  const { messages, getMessages, isMessagesLoading, selectedUser, subscribeToMessage, unsubscribeFromMessage } = useChatStore();
   const { authUser } = useAuthStore();
+  const messagesEndRef = useRef(null); // Ref to target the end of the messages list
 
   useEffect(() => {
     getMessages(selectedUser._id);
-  }, [selectedUser._id, getMessages]);
+    subscribeToMessage();
+
+    return () => {
+      unsubscribeFromMessage();
+    };
+  }, [selectedUser._id, getMessages, subscribeToMessage, unsubscribeFromMessage]);
+
+  // Auto-scroll to the bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   if (isMessagesLoading) {
     return (
@@ -57,6 +70,8 @@ function ChatContainer() {
             </div>
           </div>
         ))}
+        {/* Invisible div at the end of the message list for auto-scrolling */}
+        <div ref={messagesEndRef}></div>
       </div>
       <MessageInput />
     </div>
